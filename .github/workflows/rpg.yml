@@ -1,0 +1,252 @@
+name: RPG Profil
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # her gun bir kez gunceller
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/rpg.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Banner ve karakter kartini olustur
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LOGIN: ${{ github.repository_owner }}
+        run: |
+          cat > /tmp/gen.js <<'JSEOF'
+          // RPG profil gorselleri ureticisi: assets/banner.svg ve assets/card.svg
+          const fs = require("fs");
+          
+          const LOGIN = process.env.LOGIN || "vehbi-cet";
+          const TOKEN = process.env.GH_TOKEN || "";
+          
+          // ---------- Sabit bilgiler (profillerden) ----------
+          const CERTS = 5; // 4x C++ + Patika Frontend
+          
+          // ---------- 5x7 piksel font (ust satir: aksan, alt satir: kuyruk) ----------
+          const G = {
+            A:[".###.","#...#","#...#","#####","#...#","#...#","#...#"],
+            B:["####.","#...#","#...#","####.","#...#","#...#","####."],
+            C:[".###.","#...#","#....","#....","#....","#...#",".###."],
+            D:["####.","#...#","#...#","#...#","#...#","#...#","####."],
+            E:["#####","#....","#....","####.","#....","#....","#####"],
+            F:["#####","#....","#....","####.","#....","#....","#...."],
+            G:[".###.","#...#","#....","#.###","#...#","#...#",".###."],
+            H:["#...#","#...#","#...#","#####","#...#","#...#","#...#"],
+            I:[".###.","..#..","..#..","..#..","..#..","..#..",".###."],
+            J:["..###","...#.","...#.","...#.","...#.","#..#.",".##.."],
+            K:["#...#","#..#.","#.#..","##...","#.#..","#..#.","#...#"],
+            L:["#....","#....","#....","#....","#....","#....","#####"],
+            M:["#...#","##.##","#.#.#","#.#.#","#...#","#...#","#...#"],
+            N:["#...#","##..#","#.#.#","#..##","#...#","#...#","#...#"],
+            O:[".###.","#...#","#...#","#...#","#...#","#...#",".###."],
+            P:["####.","#...#","#...#","####.","#....","#....","#...."],
+            Q:[".###.","#...#","#...#","#...#","#.#.#","#..#.",".##.#"],
+            R:["####.","#...#","#...#","####.","#.#..","#..#.","#...#"],
+            S:[".####","#....","#....",".###.","....#","....#","####."],
+            T:["#####","..#..","..#..","..#..","..#..","..#..","..#.."],
+            U:["#...#","#...#","#...#","#...#","#...#","#...#",".###."],
+            V:["#...#","#...#","#...#","#...#","#...#",".#.#.","..#.."],
+            W:["#...#","#...#","#...#","#.#.#","#.#.#","##.##","#...#"],
+            X:["#...#","#...#",".#.#.","..#..",".#.#.","#...#","#...#"],
+            Y:["#...#","#...#",".#.#.","..#..","..#..","..#..","..#.."],
+            Z:["#####","....#","...#.","..#..",".#...","#....","#####"],
+            "0":[".###.","#...#","#..##","#.#.#","##..#","#...#",".###."],
+            "1":["..#..",".##..","..#..","..#..","..#..","..#..",".###."],
+            "2":[".###.","#...#","....#","...#.","..#..",".#...","#####"],
+            "3":["####.","....#","....#",".###.","....#","....#","####."],
+            "4":["...#.","..##.",".#.#.","#..#.","#####","...#.","...#."],
+            "5":["#####","#....","####.","....#","....#","#...#",".###."],
+            "6":[".###.","#....","#....","####.","#...#","#...#",".###."],
+            "7":["#####","....#","...#.","..#..",".#...",".#...",".#..."],
+            "8":[".###.","#...#","#...#",".###.","#...#","#...#",".###."],
+            "9":[".###.","#...#","#...#",".####","....#","....#",".###."],
+            ">":["#....","##...","###..","####.","###..","##...","#...."],
+            "!":["..#..","..#..","..#..","..#..","..#..",".....","..#.."],
+            ".":[".....",".....",".....",".....",".....",".....","..#.."],
+            ":":[".....","..#..",".....",".....",".....","..#..","....."],
+            "-":[".....",".....",".....",".###.",".....",".....","....."],
+            "/":["....#","...#.","...#.","..#..",".#...",".#...","#...."],
+            " ":[".....",".....",".....",".....",".....",".....","....."],
+          };
+          const ACC = { "Ç":["C",null,"..#.."], "Ş":["S",null,"..#.."], "Ğ":["G",".###.",null],
+                        "İ":["I","..#..",null], "Ö":["O",".#.#.",null], "Ü":["U",".#.#.",null] };
+          
+          function glyph(ch) {
+            if (ACC[ch]) { const [b, top, bot] = ACC[ch]; return { rows: G[b], top, bot }; }
+            return { rows: G[ch] || G[" "], top: null, bot: null };
+          }
+          // Piksel yaziyi tek bir path olarak dondurur
+          function pixelText(str, x, y, s, fill, extra = "") {
+            let d = "", cx = x;
+            for (const ch of str.toLocaleUpperCase("tr-TR")) {
+              const g = glyph(ch);
+              const add = (row, ry) => { for (let i = 0; i < 5; i++) if (row[i] === "#") d += `M${cx + i * s} ${ry}h${s}v${s}h-${s}z`; };
+              if (g.top) add(g.top, y - 2 * s);
+              g.rows.forEach((r, j) => add(r, y + j * s));
+              if (g.bot) add(g.bot, y + 7 * s);
+              cx += 6 * s;
+            }
+            return `<path d="${d}" fill="${fill}" ${extra}/>`;
+          }
+          const pixelWidth = (str, s) => [...str].length * 6 * s - s;
+          
+          // ---------- Karakter sprite'i ----------
+          const PAL = { k:"#0b1020", h:"#3b2a20", s:"#f2c4a0", m:"#b5655a", c:"#2ec4b6", d:"#1a8a80", p:"#2b3a67", b:"#141414" };
+          const BODY = ["....kkkk....","..kkhhhhkk..",".khhhhhhhhk.",".khsssssshk.",".kssksskssk.",".kssssssssk.",".ksssmmsssk.","..kssssssk..","...kkkkkk...",".kccccccccck","kccdccccdcck","kscdccccdcsk","..kppppppk.."];
+          const LEGS_A = ["..kpp..ppk..","..kpp..ppk..",".kbbk..kbbk."];
+          const LEGS_B = ["..kpp..ppk..",".kpp....ppk.","kbbk....kbbk"];
+          function sprite(rows, s) {
+            const by = {};
+            rows.forEach((r, j) => [...r].forEach((c, i) => { if (PAL[c]) by[c] = (by[c] || "") + `M${i * s} ${j * s}h${s}v${s}h-${s}z`; }));
+            return Object.entries(by).map(([c, d]) => `<path d="${d}" fill="${PAL[c]}"/>`).join("");
+          }
+          function legs(rows, s) { return sprite([...Array(BODY.length).fill("............"), ...rows], s); }
+          
+          // ---------- Yildizlar (sabit tohumla) ----------
+          function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
+          function stars(w, h, n, seed) {
+            const r = rng(seed); let out = "";
+            for (let i = 0; i < n; i++) {
+              const x = Math.floor(r() * w), y = Math.floor(r() * h), z = r() < 0.2 ? 3 : 2;
+              const dur = (1.5 + r() * 3).toFixed(1), beg = (r() * 3).toFixed(1);
+              out += `<rect x="${x}" y="${y}" width="${z}" height="${z}" fill="#fff"><animate attributeName="opacity" values="0.15;1;0.15" dur="${dur}s" begin="${beg}s" repeatCount="indefinite"/></rect>`;
+            }
+            return out;
+          }
+          
+          // ---------- BANNER ----------
+          function banner() {
+            const W = 1000, H = 300;
+            const t1 = "MUHAMMED VEHBİ ÇETİNKAYA", s1 = 5;
+            const t2 = "SINIF: OYUN TASARIMCISI", s2 = 3;
+            const t3 = "> PRESS START", s3 = 3;
+            const s = 4, sw = 12 * s;
+            let ground = "";
+            for (let x = 0; x < W; x += 20) ground += `<rect x="${x}" y="262" width="20" height="8" fill="${(x / 20) % 2 ? "#2ec4b6" : "#25a89c"}"/><rect x="${x}" y="270" width="20" height="30" fill="${(x / 20) % 2 ? "#1b2340" : "#161d36"}"/>`;
+            // izometrik kup (Blender'a selam)
+            const cube = `<g transform="translate(880 120)"><g><animateTransform attributeName="transform" type="translate" values="0 0;0 -10;0 0" dur="3s" repeatCount="indefinite"/>
+              <polygon points="0,-30 26,-15 0,0 -26,-15" fill="#f5a623"/><polygon points="-26,-15 0,0 0,30 -26,15" fill="#c97c0e"/><polygon points="26,-15 0,0 0,30 26,15" fill="#e0901a"/></g></g>`;
+            const gem = `<g transform="translate(110 130)"><g><animateTransform attributeName="transform" type="translate" values="0 0;0 8;0 0" dur="2.6s" repeatCount="indefinite"/>
+              <polygon points="0,-22 16,0 0,22 -16,0" fill="#9b5de5"/><polygon points="0,-22 16,0 0,0" fill="#c39bf0"/></g></g>`;
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+          <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1020"/><stop offset="1" stop-color="#2a1b4a"/></linearGradient>
+          <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse"><rect width="4" height="2" fill="#000" opacity="0.18"/></pattern></defs>
+          <rect width="${W}" height="${H}" fill="url(#bg)"/>
+          ${stars(W, 250, 70, 7)}
+          ${cube}${gem}
+          ${pixelText(t1, (W - pixelWidth(t1, s1)) / 2 + 3, 63, s1, "#0b1020")}
+          ${pixelText(t1, (W - pixelWidth(t1, s1)) / 2, 60, s1, "#ffffff")}
+          ${pixelText(t2, (W - pixelWidth(t2, s2)) / 2, 125, s2, "#2ec4b6")}
+          <text x="${W / 2}" y="178" text-anchor="middle" font-family="Consolas, 'Courier New', monospace" font-size="17" fill="#c9d1f5">Trabzon Üniversitesi • Dijital Oyun Tasarımı • Unity • Unreal • Blender</text>
+          <g>${pixelText(t3, (W - pixelWidth(t3, s3)) / 2, 210, s3, "#ffd166")}<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="1.1s" repeatCount="indefinite"/></g>
+          ${ground}
+          <g><animateTransform attributeName="transform" type="translate" from="-60 ${262 - 16 * s}" to="${W + 10} ${262 - 16 * s}" dur="11s" repeatCount="indefinite"/>
+          ${sprite(BODY, s)}
+          <g>${legs(LEGS_A, s)}<animate attributeName="opacity" values="1;1;0;0" keyTimes="0;0.5;0.5;1" dur="0.4s" repeatCount="indefinite"/></g>
+          <g opacity="0">${legs(LEGS_B, s)}<animate attributeName="opacity" values="0;0;1;1" keyTimes="0;0.5;0.5;1" dur="0.4s" repeatCount="indefinite"/></g>
+          </g>
+          <rect width="${W}" height="${H}" fill="url(#scan)"/>
+          </svg>`;
+          }
+          
+          // ---------- KARAKTER KARTI ----------
+          function card(d) {
+            const W = 1000, H = 450;
+            const xp = d.contribTotal * 10 + d.repos * 50 + d.stars * 30 + CERTS * 200;
+            const lvl = Math.floor(Math.sqrt(xp / 50));
+            const cur = 50 * lvl * lvl, next = 50 * (lvl + 1) * (lvl + 1);
+            const pct = Math.max(0.03, (xp - cur) / (next - cur));
+            const f = "font-family=\"Consolas, 'Courier New', monospace\"";
+            const SW = 213;
+            const stat = (col, row, icon, label, val, color) => { const x = 300 + col * (SW + 10), y = 196 + row * 82;
+              return `<g transform="translate(${x} ${y})"><rect width="${SW}" height="72" rx="4" fill="#141b33" stroke="#2a3563" stroke-width="2"/>
+          <text x="14" y="27" ${f} font-size="15" fill="#8b93c7">${icon} ${label}</text>
+          <text x="14" y="58" ${f} font-size="26" font-weight="bold" fill="${color}">${val}</text></g>`; };
+            const items = ["Blender", "Unity", "Unreal Engine", "Blueprint", "C++", "C#", "JavaScript", "HTML/CSS"];
+            let ix = 300, chips = "";
+            for (const it of items) { const w = Math.round(it.length * 8.2 + 16); chips += `<rect x="${ix}" y="388" width="${w}" height="28" rx="3" fill="#1d2647" stroke="#2ec4b6" stroke-width="1.5"/><text x="${ix + w / 2}" y="407" text-anchor="middle" ${f} font-size="13" fill="#e6ebff">${it}</text>`; ix += w + 6; }
+            return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+          <rect width="${W}" height="${H}" rx="10" fill="#0b1020"/>
+          <rect x="8" y="8" width="${W - 16}" height="${H - 16}" rx="6" fill="none" stroke="#2ec4b6" stroke-width="3"/>
+          <rect x="16" y="16" width="${W - 32}" height="${H - 32}" rx="4" fill="none" stroke="#2a3563" stroke-width="2"/>
+          <rect x="40" y="44" width="220" height="290" rx="6" fill="#141b33" stroke="#2a3563" stroke-width="2"/>
+          ${stars(220, 290, 20, 3).replace(/<rect x="(\d+)" y="(\d+)"/g, (m, a, b) => `<rect x="${40 + +a}" y="${44 + +b}"`)}
+          <g transform="translate(78 80)"><g><animateTransform attributeName="transform" type="translate" values="0 0;0 -6;0 0" dur="1.6s" repeatCount="indefinite"/>${sprite([...BODY, ...LEGS_A], 12)}</g></g>
+          ${pixelText("LV " + lvl, 150 - pixelWidth("LV " + lvl, 4) / 2, 360, 4, "#ffd166")}
+          <text x="150" y="410" text-anchor="middle" ${f} font-size="13" fill="#8b93c7">github.com/${LOGIN}</text>
+          ${pixelText("VEHBİ ÇETİNKAYA", 300, 52, 4, "#ffffff")}
+          <text x="300" y="104" ${f} font-size="16" fill="#c9d1f5">Sınıf: <tspan fill="#2ec4b6">Oyun Tasarımcısı</tspan>  ·  Bölge: <tspan fill="#2ec4b6">Trabzon</tspan></text>
+          <text x="300" y="128" ${f} font-size="16" fill="#c9d1f5">Lonca: <tspan fill="#2ec4b6">Trabzon Üniversitesi · Dijital Oyun Tasarımı</tspan></text>
+          <text x="300" y="160" ${f} font-size="14" fill="#8b93c7">XP ${xp} / ${next}  →  LV ${lvl + 1}</text>
+          <rect x="300" y="168" width="659" height="16" fill="#141b33" stroke="#2a3563" stroke-width="2"/>
+          <rect x="302" y="170" width="0" height="12" fill="#ffd166"><animate attributeName="width" from="0" to="${Math.round(655 * pct)}" dur="1.6s" fill="freeze"/></rect>
+          ${stat(0, 0, "📦", "Repo", d.repos, "#2ec4b6")}
+          ${stat(1, 0, "🔥", "Toplam Katkı", d.contribTotal, "#ff7b54")}
+          ${stat(2, 0, "📜", "Sertifika", CERTS, "#ffd166")}
+          ${stat(0, 1, "🧊", "Blender Repo", d.blender, "#f5a623")}
+          ${stat(1, 1, "⏳", "Oyunda Geçen Gün", d.days, "#9b5de5")}
+          ${stat(2, 1, "⭐", "Yıldız", d.stars, "#e6ebff")}
+          <text x="300" y="378" ${f} font-size="14" fill="#8b93c7">🎒 EKİPMAN</text>
+          ${chips}
+          <text x="${W - 30}" y="428" text-anchor="end" ${f} font-size="11" fill="#4b5487">son güncelleme ${new Date().toISOString().slice(0, 10)}</text>
+          </svg>`;
+          }
+          
+          // ---------- GitHub verisi ----------
+          async function gql(query, variables) {
+            const r = await fetch("https://api.github.com/graphql", { method: "POST", headers: { Authorization: "bearer " + TOKEN, "Content-Type": "application/json" }, body: JSON.stringify({ query, variables }) });
+            const j = await r.json(); if (j.errors) throw new Error(JSON.stringify(j.errors)); return j.data;
+          }
+          async function getData() {
+            if (!TOKEN) return { repos: 28, stars: 1, blender: 8, contribTotal: 120, days: Math.floor((Date.now() - Date.parse("2022-11-26")) / 864e5) };
+            const u = (await gql(`query($l:String!){user(login:$l){createdAt repositories(ownerAffiliations:OWNER,privacy:PUBLIC,first:100){totalCount nodes{name stargazerCount}}}}`, { l: LOGIN })).user;
+            const nodes = u.repositories.nodes;
+            let contribTotal = 0;
+            const start = new Date(u.createdAt).getUTCFullYear(), end = new Date().getUTCFullYear();
+            for (let y = start; y <= end; y++) {
+              const c = await gql(`query($l:String!,$f:DateTime!,$t:DateTime!){user(login:$l){contributionsCollection(from:$f,to:$t){contributionCalendar{totalContributions}}}}`, { l: LOGIN, f: `${y}-01-01T00:00:00Z`, t: `${y}-12-31T23:59:59Z` });
+              contribTotal += c.user.contributionsCollection.contributionCalendar.totalContributions;
+            }
+            return {
+              repos: u.repositories.totalCount,
+              stars: nodes.reduce((a, n) => a + n.stargazerCount, 0),
+              blender: nodes.filter(n => /blender/i.test(n.name)).length,
+              contribTotal,
+              days: Math.floor((Date.now() - Date.parse(u.createdAt)) / 864e5),
+            };
+          }
+          
+          (async () => {
+            const d = await getData();
+            fs.mkdirSync("assets", { recursive: true });
+            fs.writeFileSync("assets/banner.svg", banner());
+            fs.writeFileSync("assets/card.svg", card(d));
+            console.log("OK", d);
+          })().catch(e => { console.error(e); process.exit(1); });
+          JSEOF
+          node /tmp/gen.js
+
+      - name: Degisiklikleri kaydet
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add assets
+          git diff --cached --quiet || git commit -m "RPG profil gorselleri guncellendi"
+          git push
