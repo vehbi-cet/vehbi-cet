@@ -10,7 +10,7 @@
 <rect width="1200" height="110" rx="6" fill="#06080f"/>
 <rect width="1200" height="110" rx="6" fill="url(#bg)" opacity="0.8"/>
 <g opacity="0.9"><rect x="-300" y="-200" width="120" height="600" fill="url(#beam)" transform="rotate(22)"><animate attributeName="x" from="-300" to="1500" dur="6s" repeatCount="indefinite"/></rect></g>
-<text x="48" y="66" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="40" font-weight="200" fill="#ffb547" opacity="0.9">02</text>
+<text x="48" y="66" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="40" font-weight="200" fill="#ffb547" opacity="0.9">05</text>
 <line x1="112" y1="30" x2="112" y2="80" stroke="#ffb547" stroke-opacity="0.5"/>
 <text x="136" y="58" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="26" font-weight="300" letter-spacing="10" fill="url(#shine)">YOLCULUK</text>
 <text x="138" y="84" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="13" letter-spacing="3" fill="#8a93b0">2022'DEN BUGÜNE</text>

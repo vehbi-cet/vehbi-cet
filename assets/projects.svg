@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="330" viewBox="0 0 1200 330">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04050a"/><stop offset="0.6" stop-color="#0a1024"/><stop offset="1" stop-color="#04050a"/></linearGradient>
+<radialGradient id="vig" cx="0.5" cy="0.5" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.85"/></radialGradient>
+<radialGradient id="glowG" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb547" stop-opacity="0.35"/><stop offset="1" stop-color="#ffb547" stop-opacity="0"/></radialGradient>
+<radialGradient id="glowC" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#4cc9f0" stop-opacity="0.22"/><stop offset="1" stop-color="#4cc9f0" stop-opacity="0"/></radialGradient>
+<linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.10"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="-400" y1="0" x2="0" y2="0">
+  <stop offset="0" stop-color="#f4f6fb"/><stop offset="0.45" stop-color="#f4f6fb"/><stop offset="0.5" stop-color="#ffb547"/><stop offset="0.55" stop-color="#f4f6fb"/><stop offset="1" stop-color="#f4f6fb"/>
+  <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="1600 0" dur="5s" begin="1.6s" repeatCount="indefinite"/></linearGradient></defs>
+<rect width="1200" height="330" rx="8" fill="#06080f"/>
+<ellipse cx="600" cy="165" rx="540" ry="198" fill="url(#glowG)" opacity="0.5"/><g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.2s" dur="0.9s" fill="freeze"/>
+<animateTransform attributeName="transform" type="translate" from="0 16" to="0 0" begin="0.2s" dur="0.9s" fill="freeze"/>
+<rect x="20" y="20" width="570" height="290" rx="12" fill="#ffffff" fill-opacity="0.035" stroke="#4cc9f0" stroke-opacity="0.35"/>
+<rect x="20" y="20" width="4" height="290" rx="2" fill="#4cc9f0"/>
+<text x="60" y="62" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" letter-spacing="4" fill="#4cc9f0">UNITY</text>
+<text x="58" y="112" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="40" font-weight="300" letter-spacing="6" fill="url(#shine)">SHEEPFARMVILLE</text>
+<rect x="386" y="40" width="174" height="30" rx="15" fill="#4cc9f0" fill-opacity="0.12" stroke="#4cc9f0" stroke-opacity="0.7"/>
+<circle cx="402" cy="55" r="4" fill="#4cc9f0"><animate attributeName="opacity" values="1;0.2;1" dur="1.6s" repeatCount="indefinite"/></circle>
+<text x="479" y="60" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="11" letter-spacing="2" fill="#4cc9f0">YAKINDA STEAM'DE</text>
+<line x1="60" y1="136" x2="550" y2="136" stroke="#ffffff" stroke-opacity="0.08"/>
+<path d="M60 176 l6 -6 l6 6 l-6 6 z" fill="#4cc9f0"/><text x="80" y="181" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Yaklaşık 1 ayda geliştirdiğim çiftlik oyunu</text><path d="M60 212 l6 -6 l6 6 l-6 6 z" fill="#4cc9f0"/><text x="80" y="217" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Trabzon Üniversitesi OGP kulübü adına</text><path d="M60 248 l6 -6 l6 6 l-6 6 z" fill="#4cc9f0"/><text x="80" y="253" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Trabzon BilimFest 2026'da sergilendi</text></g><g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.55s" dur="0.9s" fill="freeze"/>
+<animateTransform attributeName="transform" type="translate" from="0 16" to="0 0" begin="0.55s" dur="0.9s" fill="freeze"/>
+<rect x="610" y="20" width="570" height="290" rx="12" fill="#ffffff" fill-opacity="0.035" stroke="#ffb547" stroke-opacity="0.35"/>
+<rect x="610" y="20" width="4" height="290" rx="2" fill="#ffb547"/>
+<text x="650" y="62" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="12" letter-spacing="4" fill="#ffb547">UNREAL ENGINE 5 · C++</text>
+<text x="648" y="112" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="40" font-weight="300" letter-spacing="6" fill="url(#shine)">PHANTOMLAND</text>
+<rect x="994" y="40" width="156" height="30" rx="15" fill="#ffb547" fill-opacity="0.12" stroke="#ffb547" stroke-opacity="0.7"/>
+<circle cx="1010" cy="55" r="4" fill="#ffb547"><animate attributeName="opacity" values="1;0.2;1" dur="1.6s" repeatCount="indefinite"/></circle>
+<text x="1078" y="60" text-anchor="middle" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="11" letter-spacing="2" fill="#ffb547">GELİŞTİRİLİYOR</text>
+<line x1="650" y1="136" x2="1140" y2="136" stroke="#ffffff" stroke-opacity="0.08"/>
+<path d="M650 176 l6 -6 l6 6 l-6 6 z" fill="#ffb547"/><text x="670" y="181" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Gece-gündüz döngüsü (Directional Light)</text><path d="M650 212 l6 -6 l6 6 l-6 6 z" fill="#ffb547"/><text x="670" y="217" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Eve girince gizlenen tavan (Box Collision)</text><path d="M650 248 l6 -6 l6 6 l-6 6 z" fill="#ffb547"/><text x="670" y="253" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="16" fill="#f4f6fb">Dönen deniz feneri (Sphere Component)</text></g></svg>

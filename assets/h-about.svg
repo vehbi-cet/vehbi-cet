@@ -13,6 +13,6 @@
 <text x="48" y="66" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="40" font-weight="200" fill="#ffb547" opacity="0.9">01</text>
 <line x1="112" y1="30" x2="112" y2="80" stroke="#ffb547" stroke-opacity="0.5"/>
 <text x="136" y="58" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="26" font-weight="300" letter-spacing="10" fill="url(#shine)">HAKKIMDA</text>
-<text x="138" y="84" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="13" letter-spacing="3" fill="#8a93b0">OYUN TASARIMI · 3D · PROGRAMLAMA</text>
+<text x="138" y="84" font-family="'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif" font-size="13" letter-spacing="3" fill="#8a93b0">OYUN TASARIMI · GELİŞTİRME · 3D</text>
 <line x1="0" y1="109" x2="0" y2="109" stroke="#ffb547" stroke-opacity="0.6"><animate attributeName="x2" from="0" to="1200" dur="1.6s" fill="freeze"/></line>
 </svg>
