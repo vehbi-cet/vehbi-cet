@@ -1,0 +1,260 @@
+name: Profil Gorselleri
+ 
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/gorseller.yml
+ 
+permissions:
+  contents: write
+ 
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+ 
+      - name: Sinematik gorselleri olustur
+        run: |
+          cat > /tmp/gen.py <<'PYEOF'
+          import random, os
+          os.makedirs("assets", exist_ok=True)
+ 
+          FONT = "font-family=\"'Segoe UI','Helvetica Neue',Helvetica,Arial,sans-serif\""
+          GOLD, CYAN, WHITE, MUTED = "#ffb547", "#4cc9f0", "#f4f6fb", "#8a93b0"
+ 
+          def embers(w, h, n, seed):
+              r = random.Random(seed); out = []
+              for _ in range(n):
+                  x = r.uniform(0, w); y0 = r.uniform(h * 0.5, h + 20); dy = r.uniform(80, 220)
+                  rad = r.choice([1, 1, 1.5, 2]); dur = r.uniform(5, 11); beg = r.uniform(0, 8)
+                  col = r.choice([GOLD, GOLD, CYAN, WHITE])
+                  out.append(f'<circle cx="{x:.0f}" cy="{y0:.0f}" r="{rad}" fill="{col}" opacity="0">'
+                             f'<animate attributeName="cy" from="{y0:.0f}" to="{y0-dy:.0f}" dur="{dur:.1f}s" begin="{beg:.1f}s" repeatCount="indefinite"/>'
+                             f'<animate attributeName="opacity" values="0;0.9;0" dur="{dur:.1f}s" begin="{beg:.1f}s" repeatCount="indefinite"/></circle>')
+              return "".join(out)
+ 
+          def corners(w, h, m=22, l=34, col=GOLD, op=0.7):
+              p = [(m, m, 1, 1), (w - m, m, -1, 1), (m, h - m, 1, -1), (w - m, h - m, -1, -1)]
+              return "".join(f'<path d="M{x} {y+sy*l}V{y}H{x+sx*l}" fill="none" stroke="{col}" stroke-width="2" opacity="{op}"/>' for x, y, sx, sy in p)
+ 
+          def base_defs(w, h):
+              return f'''<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#04050a"/><stop offset="0.6" stop-color="#0a1024"/><stop offset="1" stop-color="#04050a"/></linearGradient>
+          <radialGradient id="vig" cx="0.5" cy="0.5" r="0.75"><stop offset="0.55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="0.85"/></radialGradient>
+          <radialGradient id="glowG" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="{GOLD}" stop-opacity="0.35"/><stop offset="1" stop-color="{GOLD}" stop-opacity="0"/></radialGradient>
+          <radialGradient id="glowC" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="{CYAN}" stop-opacity="0.22"/><stop offset="1" stop-color="{CYAN}" stop-opacity="0"/></radialGradient>
+          <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="0.5" stop-color="#fff" stop-opacity="0.10"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+          <linearGradient id="shine" gradientUnits="userSpaceOnUse" x1="-400" y1="0" x2="0" y2="0">
+            <stop offset="0" stop-color="{WHITE}"/><stop offset="0.45" stop-color="{WHITE}"/><stop offset="0.5" stop-color="{GOLD}"/><stop offset="0.55" stop-color="{WHITE}"/><stop offset="1" stop-color="{WHITE}"/>
+            <animateTransform attributeName="gradientTransform" type="translate" from="0 0" to="{w+400} 0" dur="5s" begin="1.6s" repeatCount="indefinite"/></linearGradient>'''
+ 
+          # ---------------- HERO ----------------
+          def hero():
+              W, H = 1200, 440
+              tags = ["UNITY", "UNREAL ENGINE", "BLENDER"]
+              tw = [len(t) * 11 + 48 for t in tags]; gap = 16; tx = (W - (sum(tw) + gap * 2)) / 2; tag_svg = ""
+              for i, (t, w) in enumerate(zip(tags, tw)):
+                  tag_svg += (f'<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{2.2+i*0.25}s" dur="0.6s" fill="freeze"/>'
+                              f'<rect x="{tx:.0f}" y="338" width="{w}" height="36" rx="18" fill="#ffffff" fill-opacity="0.04" stroke="{GOLD}" stroke-opacity="0.55"/>'
+                              f'<text x="{tx+w/2:.0f}" y="361" text-anchor="middle" {FONT} font-size="13" letter-spacing="3" fill="{WHITE}">{t}</text></g>')
+                  tx += w + gap
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" fill="url(#bg)"/>
+          <ellipse cx="300" cy="200" rx="420" ry="260" fill="url(#glowC)"><animate attributeName="cx" values="260;420;260" dur="14s" repeatCount="indefinite"/></ellipse>
+          <ellipse cx="900" cy="240" rx="460" ry="280" fill="url(#glowG)"><animate attributeName="cx" values="940;780;940" dur="16s" repeatCount="indefinite"/></ellipse>
+          <g opacity="0.9"><rect x="-300" y="-200" width="160" height="900" fill="url(#beam)" transform="rotate(22)"><animate attributeName="x" from="-400" to="1500" dur="7s" repeatCount="indefinite"/></rect></g>
+          {embers(W, H, 55, 11)}
+          <g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.2s" dur="1.2s" fill="freeze"/>
+          <text x="{W/2}" y="120" text-anchor="middle" {FONT} font-size="15" letter-spacing="9" fill="{GOLD}">TRABZON ÜNİVERSİTESİ  ·  DİJİTAL OYUN TASARIMI</text></g>
+          <g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.6s" dur="1.4s" fill="freeze"/>
+          <text x="{W/2}" y="168" text-anchor="middle" {FONT} font-size="22" font-weight="300" letter-spacing="16" fill="{MUTED}">MUHAMMED</text></g>
+          <g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="0.9s" dur="1.4s" fill="freeze"/>
+          <text x="{W/2}" y="238" text-anchor="middle" {FONT} font-size="66" font-weight="300" fill="url(#shine)" letter-spacing="14">VEHBİ ÇETİNKAYA<animate attributeName="letter-spacing" from="34" to="14" begin="0.9s" dur="2s" fill="freeze"/></text></g>
+          <g><line x1="{W/2}" y1="272" x2="{W/2}" y2="272" stroke="{GOLD}" stroke-width="1.5"><animate attributeName="x1" from="{W/2}" to="{W/2-230}" begin="1.5s" dur="1s" fill="freeze"/><animate attributeName="x2" from="{W/2}" to="{W/2+230}" begin="1.5s" dur="1s" fill="freeze"/></line>
+          <rect x="{W/2-5}" y="267" width="10" height="10" fill="{GOLD}" transform="rotate(45 {W/2} 272)" opacity="0"><animate attributeName="opacity" from="0" to="1" begin="1.5s" dur="0.5s" fill="freeze"/></rect></g>
+          <g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="1.9s" dur="1s" fill="freeze"/>
+          <text x="{W/2}" y="312" text-anchor="middle" {FONT} font-size="17" letter-spacing="7" fill="{WHITE}">GAME DESIGNER  ·  3D ARTIST</text></g>
+          {tag_svg}
+          <rect width="{W}" height="{H}" fill="url(#vig)"/>
+          <rect width="{W}" height="34" fill="#000"/><rect y="{H-34}" width="{W}" height="34" fill="#000"/>
+          {corners(W, H, 48, 30)}
+          <text x="60" y="{H-13}" {FONT} font-size="11" letter-spacing="3" fill="{MUTED}">EST. 2022</text>
+          <text x="{W-60}" y="{H-13}" text-anchor="end" {FONT} font-size="11" letter-spacing="3" fill="{MUTED}">TRABZON, TR</text>
+          </svg>'''
+ 
+          # ---------------- BÖLÜM BAŞLIĞI ----------------
+          def header(num, title, sub):
+              W, H = 1200, 110
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" rx="6" fill="#06080f"/>
+          <rect width="{W}" height="{H}" rx="6" fill="url(#bg)" opacity="0.8"/>
+          <g opacity="0.9"><rect x="-300" y="-200" width="120" height="600" fill="url(#beam)" transform="rotate(22)"><animate attributeName="x" from="-300" to="1500" dur="6s" repeatCount="indefinite"/></rect></g>
+          <text x="48" y="66" {FONT} font-size="40" font-weight="200" fill="{GOLD}" opacity="0.9">{num}</text>
+          <line x1="112" y1="30" x2="112" y2="80" stroke="{GOLD}" stroke-opacity="0.5"/>
+          <text x="136" y="58" {FONT} font-size="26" font-weight="300" letter-spacing="10" fill="url(#shine)">{title}</text>
+          <text x="138" y="84" {FONT} font-size="13" letter-spacing="3" fill="{MUTED}">{sub}</text>
+          <line x1="0" y1="{H-1}" x2="0" y2="{H-1}" stroke="{GOLD}" stroke-opacity="0.6"><animate attributeName="x2" from="0" to="{W}" dur="1.6s" fill="freeze"/></line>
+          </svg>'''
+ 
+          # ---------------- ÖNE ÇIKANLAR ----------------
+          def highlights():
+              W, H = 1200, 210
+              items = [("40+", "3D MODEL", "Blender ile modellenmiş"), ("8", "BLENDER REPO", "Mimari, araç, bilim kurgu"),
+                       ("5", "SERTİFİKA", "4× C++ · Frontend"), ("28", "PUBLIC REPO", "2022'den beri GitHub'da")]
+              cw, g = 270, 20; x0 = (W - (cw * 4 + g * 3)) / 2; out = ""
+              for i, (n, t, s) in enumerate(items):
+                  x = x0 + i * (cw + g); b = 0.2 + i * 0.25
+                  out += f'''<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{b}s" dur="0.8s" fill="freeze"/>
+          <animateTransform attributeName="transform" type="translate" from="0 18" to="0 0" begin="{b}s" dur="0.8s" fill="freeze"/>
+          <rect x="{x:.0f}" y="24" width="{cw}" height="160" rx="10" fill="#ffffff" fill-opacity="0.035" stroke="#ffffff" stroke-opacity="0.09"/>
+          <rect x="{x:.0f}" y="24" width="{cw}" height="3" rx="1.5" fill="{GOLD}" opacity="0.8"/>
+          <text x="{x+cw/2:.0f}" y="100" text-anchor="middle" {FONT} font-size="54" font-weight="200" fill="{WHITE}">{n}</text>
+          <text x="{x+cw/2:.0f}" y="132" text-anchor="middle" {FONT} font-size="13" letter-spacing="4" fill="{GOLD}">{t}</text>
+          <text x="{x+cw/2:.0f}" y="158" text-anchor="middle" {FONT} font-size="13" fill="{MUTED}">{s}</text></g>'''
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" rx="8" fill="#06080f"/>
+          <ellipse cx="600" cy="105" rx="520" ry="120" fill="url(#glowG)" opacity="0.6"/>
+          {out}</svg>'''
+ 
+          # ---------------- ZAMAN ÇİZELGESİ ----------------
+          def timeline():
+              W, H = 1200, 300
+              ev = [("KAS 2022", "GitHub'a katıldı", "Kodluyoruz ile ilk repo"),
+                    ("2023", "Web Geliştirme", "HTML · CSS · Bootstrap · JS"),
+                    ("NİS 2023", "Patika.dev", "Frontend Web Dev. sertifikası"),
+                    ("TEM 2023", "Unity", "Güneş Sistemi · Tank Oyunu"),
+                    ("2023 – 2024", "Blender Serisi", "8 repo · 40+ 3D model"),
+                    ("EKİ–ARA 2023", "C++", "4 sertifika"),
+                    ("ŞİMDİ", "Dijital Oyun Tasarımı", "Trabzon Üniversitesi")]
+              x0, x1, y = 90, 1110, 140; step = (x1 - x0) / (len(ev) - 1); nodes = ""
+              for i, (d, t, s) in enumerate(ev):
+                  x = x0 + i * step; b = 0.4 + i * 0.35; last = i == len(ev) - 1
+                  col = CYAN if last else GOLD
+                  up = i % 2 == 0
+                  ty = y - 56 if up else y + 46
+                  nodes += f'''<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{b}s" dur="0.6s" fill="freeze"/>
+          <circle cx="{x:.0f}" cy="{y}" r="14" fill="{col}" opacity="0.15"><animate attributeName="r" values="10;18;10" dur="2.4s" begin="{b}s" repeatCount="indefinite"/></circle>
+          <circle cx="{x:.0f}" cy="{y}" r="6" fill="#06080f" stroke="{col}" stroke-width="2.5"/>
+          <line x1="{x:.0f}" y1="{y-(14 if up else -14)}" x2="{x:.0f}" y2="{y-(30 if up else -26)}" stroke="{col}" stroke-opacity="0.5"/>
+          <text x="{x:.0f}" y="{ty-22 if up else ty}" text-anchor="middle" {FONT} font-size="11" letter-spacing="2.5" fill="{col}">{d}</text>
+          <text x="{x:.0f}" y="{ty-2 if up else ty+22}" text-anchor="middle" {FONT} font-size="16" font-weight="600" fill="{WHITE}">{t}</text>
+          <text x="{x:.0f}" y="{ty+17 if up else ty+41}" text-anchor="middle" {FONT} font-size="12" fill="{MUTED}">{s}</text></g>'''
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}
+          <linearGradient id="ln" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="{GOLD}" stop-opacity="0.1"/><stop offset="0.85" stop-color="{GOLD}"/><stop offset="1" stop-color="{CYAN}"/></linearGradient>
+          <radialGradient id="pulse"><stop offset="0" stop-color="#fff"/><stop offset="0.3" stop-color="{GOLD}"/><stop offset="1" stop-color="{GOLD}" stop-opacity="0"/></radialGradient></defs>
+          <rect width="{W}" height="{H}" rx="8" fill="#06080f"/>
+          <line x1="{x0}" y1="{y}" x2="{x0}" y2="{y}" stroke="url(#ln)" stroke-width="2"><animate attributeName="x2" from="{x0}" to="{x1}" dur="2.6s" begin="0.2s" fill="freeze"/></line>
+          <circle cx="{x0}" cy="{y}" r="16" fill="url(#pulse)" opacity="0"><animate attributeName="cx" from="{x0}" to="{x1}" dur="4s" begin="3s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;1;1;0" dur="4s" begin="3s" repeatCount="indefinite"/></circle>
+          {nodes}</svg>'''
+ 
+          # ---------------- 3D ÇALIŞMALAR ----------------
+          def works():
+              W, H = 1200, 330
+              cats = [("MİMARİ", "Lüks villa · yazlık evler · orman evleri · motel · restoran · deniz feneri · korsan evi", "house"),
+                      ("ARAÇLAR", "Tekne · gemi · traktör · karavan", "car"),
+                      ("HAVACILIK &amp; ASKERİ", "Havalimanı · pist · hangar · askeri üs · savaş uçağı", "plane"),
+                      ("BİLİM KURGU", "X-Wing · uzay hangarı", "ship"),
+                      ("OBJELER", "Piyano · bar taburesi · hot dog standı · güneş paneli", "cube")]
+              icons = {
+                  "house": "M-18 4 L0 -14 L18 4 M-13 0 V16 H13 V0 M-4 16 V6 H4 V16",
+                  "car": "M-20 6 H20 V-2 L12 -4 L6 -12 H-8 L-14 -4 L-20 -2 Z M-12 6 a4 4 0 1 0 0.1 0 M12 6 a4 4 0 1 0 0.1 0",
+                  "plane": "M-22 0 H22 M4 0 L-6 -16 H-1 L10 0 L-1 16 H-6 Z M-18 0 L-22 -8 M-18 0 L-22 8",
+                  "ship": "M0 -18 L8 6 L0 2 L-8 6 Z M-20 10 L-8 0 M20 10 L8 0 M-20 10 V-6 M20 10 V-6",
+                  "cube": "M0 -16 L16 -8 V10 L0 18 L-16 10 V-8 Z M-16 -8 L0 0 L16 -8 M0 0 V18"}
+              cw, g = 216, 15; x0 = (W - (cw * 5 + g * 4)) / 2; out = ""
+              for i, (t, s, ic) in enumerate(cats):
+                  x = x0 + i * (cw + g); b = 0.2 + i * 0.2
+                  words = s.split(" · "); lines, cur = [], ""
+                  for wd in words:
+                      cand = (cur + " · " + wd) if cur else wd
+                      if len(cand) > 24: lines.append(cur); cur = wd
+                      else: cur = cand
+                  lines.append(cur)
+                  txt = "".join(f'<text x="{x+cw/2:.0f}" y="{208+k*20}" text-anchor="middle" {FONT} font-size="13" fill="{MUTED}">{l}</text>' for k, l in enumerate(lines))
+                  out += f'''<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{b}s" dur="0.8s" fill="freeze"/>
+          <rect x="{x:.0f}" y="20" width="{cw}" height="290" rx="10" fill="#ffffff" fill-opacity="0.03" stroke="#ffffff" stroke-opacity="0.08"/>
+          <circle cx="{x+cw/2:.0f}" cy="100" r="46" fill="url(#glowG)"/>
+          <circle cx="{x+cw/2:.0f}" cy="100" r="40" fill="none" stroke="{GOLD}" stroke-opacity="0.35" stroke-dasharray="4 6"><animateTransform attributeName="transform" type="rotate" from="0 {x+cw/2:.0f} 100" to="360 {x+cw/2:.0f} 100" dur="{18+i*3}s" repeatCount="indefinite"/></circle>
+          <path d="{icons[ic]}" transform="translate({x+cw/2:.0f} 100) scale(1.3)" fill="none" stroke="{WHITE}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>
+          <text x="{x+cw/2:.0f}" y="178" text-anchor="middle" {FONT} font-size="13" letter-spacing="3" fill="{GOLD}">{t}</text>
+          {txt}</g>'''
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" rx="8" fill="#06080f"/>
+          {out}</svg>'''
+ 
+          # ---------------- SERTİFİKALAR ----------------
+          def certs():
+              W, H = 1200, 200
+              cs = [("Introduction to C++", "Sololearn", "EKİ 2023"), ("C++ Intermediate", "Sololearn", "KAS 2023"),
+                    ("C++", "Programming Hub", "ARA 2023"), ("C++ Advanced", "Programming Hub", "ARA 2023"),
+                    ("Frontend Web Development", "Patika.dev", "NİS 2023")]
+              cw, g = 216, 15; x0 = (W - (cw * 5 + g * 4)) / 2; out = ""
+              for i, (t, o, d) in enumerate(cs):
+                  x = x0 + i * (cw + g); b = 0.2 + i * 0.2
+                  t1, t2 = (t, "") if len(t) <= 22 else ("Frontend Web", "Development")
+                  line2 = ""
+                  if t2:
+                      line2 = f'<text x="{x+cw/2:.0f}" y="112" text-anchor="middle" {FONT} font-size="16" font-weight="600" fill="{WHITE}">{t2}</text>'
+                  out += f'''<g opacity="0"><animate attributeName="opacity" from="0" to="1" begin="{b}s" dur="0.8s" fill="freeze"/>
+          <rect x="{x:.0f}" y="20" width="{cw}" height="160" rx="10" fill="#ffffff" fill-opacity="0.03" stroke="{GOLD}" stroke-opacity="0.25"/>
+          <path d="M{x+cw/2:.0f} 42 l9 5 v10 l-9 5 l-9 -5 v-10 z" fill="none" stroke="{GOLD}" stroke-width="1.6"/>
+          <text x="{x+cw/2:.0f}" y="57" text-anchor="middle" {FONT} font-size="10" fill="{GOLD}">✓</text>
+          <text x="{x+cw/2:.0f}" y="{98 if not t2 else 92}" text-anchor="middle" {FONT} font-size="16" font-weight="600" fill="{WHITE}">{t1}</text>
+          {line2}
+          <text x="{x+cw/2:.0f}" y="138" text-anchor="middle" {FONT} font-size="13" fill="{MUTED}">{o}</text>
+          <text x="{x+cw/2:.0f}" y="162" text-anchor="middle" {FONT} font-size="11" letter-spacing="2.5" fill="{GOLD}">{d}</text></g>'''
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" rx="8" fill="#06080f"/>
+          {out}</svg>'''
+ 
+          # ---------------- KAPANIŞ ----------------
+          def footer():
+              W, H = 1200, 200
+              return f'''<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}">
+          <defs>{base_defs(W, H)}</defs>
+          <rect width="{W}" height="{H}" fill="url(#bg)"/>
+          <ellipse cx="600" cy="100" rx="500" ry="140" fill="url(#glowG)" opacity="0.7"/>
+          {embers(W, H, 25, 5)}
+          <text x="600" y="92" text-anchor="middle" {FONT} font-size="30" font-weight="200" letter-spacing="18" fill="url(#shine)">DEVAM EDECEK<animate attributeName="opacity" values="0.55;1;0.55" dur="3.5s" repeatCount="indefinite"/></text>
+          <line x1="480" y1="116" x2="720" y2="116" stroke="{GOLD}" stroke-opacity="0.6"/>
+          <text x="600" y="146" text-anchor="middle" {FONT} font-size="12" letter-spacing="6" fill="{MUTED}">YENİ PROJELER YOLDA</text>
+          <rect width="{W}" height="{H}" fill="url(#vig)"/>
+          </svg>'''
+ 
+          files = {
+              "hero.svg": hero(), "highlights.svg": highlights(),
+              "h-about.svg": header("01", "HAKKIMDA", "OYUN TASARIMI · 3D · PROGRAMLAMA"),
+              "h-journey.svg": header("02", "YOLCULUK", "2022'DEN BUGÜNE"),
+              "h-works.svg": header("03", "3D ÇALIŞMALAR", "BLENDER PORTFOLYOSU"),
+              "h-skills.svg": header("04", "YETENEKLER", "MOTORLAR · DİLLER · ARAÇLAR"),
+              "h-certs.svg": header("05", "SERTİFİKALAR", "TAMAMLANAN EĞİTİMLER"),
+              "timeline.svg": timeline(), "works.svg": works(), "certs.svg": certs(), "footer.svg": footer(),
+          }
+          for n, s in files.items():
+              open("assets/" + n, "w", encoding="utf-8").write(s)
+          print("ok", list(files))
+          PYEOF
+          python3 /tmp/gen.py
+ 
+      - name: Gorselleri repoya kaydet
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git add assets
+          git diff --cached --quiet && exit 0
+          git commit -m "Sinematik profil gorselleri eklendi"
+          git pull --rebase origin main
+          git push origin HEAD:main
+ 
